@@ -35,8 +35,8 @@ class Kernel extends ConsoleKernel
             $file->cleanDirectory('storage/app');
         })->daily();
 
-
-        $schedule->command('auto:sync vinsmok')->cron('*/15 * * * * *')->runInBackground()->sendOutputTo(storage_path('logs/vinsmok.log'))->withoutOverlapping();
+        //08,13,18,23,28,33,38,43,48,53,58,03 * * * * *
+        $schedule->command('auto:sync vinsmok')->cron('*/15 * * * *')->runInBackground()->sendOutputTo(storage_path('logs/vinsmok.log'))->withoutOverlapping();
         //$schedule->command('auto:sync mobimelon')->cron('*/15 * * * * *')->runInBackground()->sendOutputTo(storage_path('logs/mobimelon.log'))->withoutOverlapping();
     }
 

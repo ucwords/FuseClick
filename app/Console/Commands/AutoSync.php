@@ -47,7 +47,7 @@ class AutoSync extends Command
         if (!empty($adv_config)) {
             FuseOffer::where('advertiser_id', $adv_config['advertiser_id'])->update(['adv_status' => 0]); //runJob前 默认广告主侧的offer都会paused
 
-            /*if (isset($adv_config['commonSync']) && $adv_config['commonSync'] == true) {
+            if (isset($adv_config['commonSync']) && $adv_config['commonSync'] == true) {
                 $controller_name = "App\\Http\\Controllers\\commonSyncController";
                 $controller = app()->make($controller_name);
                 $controller->config_list = ['advertiser.' . $adv_name];
@@ -57,7 +57,7 @@ class AutoSync extends Command
                 $controller_name = "App\\Http\\Controllers\\${adv_name}Controller";
                 $controller = app()->make($controller_name);
                 app()->call([$controller, 'index'], []);
-            }*/
+            }
 
             #TODO 同步结束 同步offer状态
             $manger_adv_id = $adv_config['advertiser_id'];

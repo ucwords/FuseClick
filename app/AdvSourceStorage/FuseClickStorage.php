@@ -8,8 +8,7 @@ class FuseClickStorage
 {
     public static function save($conversion_result, $creative, $carrier)
     {
-        //dd($conversion_result);
-       if (in_array($conversion_result['offer']['advertiser_id'], [8, 530])) { //需要自动更新定的广告主
+       if (in_array($conversion_result['offer']['advertiser_id'], [5,6, 8])) { //需要自动更新定的广告主
            /*********************自动与FuseClick同步开始************************/
 
            $offer_id = self::saveOffer($conversion_result['offer']);
@@ -20,7 +19,7 @@ class FuseClickStorage
 
                $bool = self::runJobs($conversion_result['offer'], $creative, $carrier, $offer_info);
                if ($bool) {
-                   FuseOffer::where('id', $offer_id)->update(['fuse_status' => 1, 'offer_id' => $bool, 'push_status' => 1]);
+                   FuseOffer::where('id', $offer_id)->update(['fuse_status' => 1, 'fuse_offer_id' => $bool, 'push_status' => 1]);
                    fmtOut(date('Y-m-d H:i:s', time()).' 新增offer :' .$bool.' success of Adv '.$conversion_result['offer']['advertiser_id']);
                } else {
                    fmtOut(date('Y-m-d H:i:s', time()).' 新增offer :' .$bool.' error of Adv '.$conversion_result['offer']['advertiser_id']);
@@ -32,9 +31,9 @@ class FuseClickStorage
 
                if ($result) { //更新成功
                    FuseOffer::where('fuse_offer_id', $result)->update(['fuse_status' => 1]);
-                   fmtOut(date('Y-m-d H:i:s', time()).' 重启offer :' .$result.' success');
+                   fmtOut(date('Y-m-d H:i:s', time()).' 重启offer: ' .$result.' success');
                } else {
-                   fmtOut(date('Y-m-d H:i:s', time()).' 重启offer :' .$result.' error');
+                   fmtOut(date('Y-m-d H:i:s', time()).' 重启offer: ' .$result.' error');
                }
 
            } elseif ($offer_info['adv_status'] == 0 && $offer_info['push_status'] == 1 && $offer_info['fuse_status'] == 1) { //停掉Fuse上offer
@@ -51,7 +50,7 @@ class FuseClickStorage
            /*********************自动与offerslook同步结束************************/
        } else { //不需要自动更新的广告主走着里
            $offer_info = ['fuse_offer_id' => 1];
-           self::runJob($conversion_result['offer'], $creative, $carrier, $offer_info);
+           self::runJobs($conversion_result['offer'], $creative, $carrier, $offer_info);
        }
 
     }
@@ -62,24 +61,36 @@ class FuseClickStorage
             #TODO setup_01 推送offer
             $post_result = FuseClick::offerPost($conversion_result);
             $post_result_arr = json_decode($post_result['result'], true);
+            //$post_result_arr['httpStatus'] = 201;
             if ($post_result_arr['httpStatus'] == 201) {  //Created successfully!
 
-                $offer_id_from_fuse = $post_result_arr['data'][0]['id'];  //fuse 返回的id
+               // $offer_id_from_fuse = 36;//$post_result_arr['data'][0]['id'];  //fuse 返回的id
                 FuseOffer::where('id', $local_offer['id'])->update(['fuse_status' => 1, 'push_status' => 1, 'fuse_offer_id' => intval($offer_id_from_fuse)]); //同步本地offer的两个状态
                 #TODO setup_01 上传素材
+                if (isset($creative['logo'])) {
+
+                    foreach ($creative[ 'logo' ] as $image) {
+                        $upload_result = FuseClick::uploadLogo($image[ 'local_path' ], $offer_id_from_fuse);
+
+                        if (isset($upload_result[ 'httpStatus' ]) && $upload_result[ 'httpStatus' ] == 202) {
+                            fmtOut("Sync offerslook offer_id:${offer_id_from_fuse} offer_logo create Success!");
+                        } else {
+                            fmtOut('Sync offerslook offer_id:'.json_encode($upload_result). ' offer_creative create Error!');
+                        }
+                    }
+                }
                 if (isset($creative['image'])) {
                     foreach ($creative[ 'image' ] as $image) {
                         $upload_result = FuseClick::uploadThumbnail($image[ 'local_path' ], $offer_id_from_fuse);
-                        $upload_result = anyToArray($upload_result);
                         if (isset($upload_result[ 'httpStatus' ]) && $upload_result[ 'httpStatus' ] == 202) {
-                            $offer_upload_id = $upload_result[ 'data' ][ $offer_id_from_fuse ][ 0 ][ 'banner_id' ];
-                            fmtOut("Sync offerslook offer_id:${offer_id_from_fuse} offer_creative create Success! Id:${offer_upload_id}");
+                            fmtOut("Sync offerslook offer_id:${offer_id_from_fuse} offer_creative create Success! ");
                         } else {
                             fmtOut('Sync offerslook offer_id:'.json_encode($upload_result). 'offer_creative create Error!');
                         }
                     }
                 }
 
+                return $offer_id_from_fuse;
             }
         } else {  //否则则为不需要自动更新
 
@@ -118,10 +129,8 @@ class FuseClickStorage
         $update_data = ['id' => $offer_id,'status' => $status];
         $post_result = FuseClick::offerPost($update_data);
         $post_result_arr = json_decode($post_result['result'], true);
-
-        if ($post_result_arr['httpStatus'] == 201) {  //Update successfully!
-            $offer_id_from_fuse = $post_result_arr['data'][0]['id'];  //fuse 返回的id
-            return $offer_id_from_fuse;
+        if ($post_result_arr['httpStatus'] == 202) {  //Update successfully!
+            return $offer_id;
         } else {
             return false;
         }
