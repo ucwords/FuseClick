@@ -11,7 +11,7 @@ return [
         'offers_item'               => false,       //single offer debug
         'conversion_value_creative' => false,       //数据转化格式后结果 与 素材采集结果  打印对接好的最终结果
     ],
-    //'http_basic_auth'  => ['karen@leanmobi.com', 'nVvq5bWEPGWu2for9vGLfuRPeQkNf0eV'],
+    //'http_basic_auth'  => [],
     'offer_api'           => '',
     //'set_cookie'     =>    '',
     //'offer_api_post_json' => '',
