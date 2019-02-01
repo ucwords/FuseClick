@@ -67,7 +67,7 @@ class GetCreativeStorage
             }
             return $info;
         }catch(\Exception $e){
-            return json_encode(['error'=>'抓取过程中出错']);
+            return false;
         }
 
     }

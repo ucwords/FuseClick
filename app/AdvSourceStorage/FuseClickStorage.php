@@ -61,7 +61,7 @@ class FuseClickStorage
             #TODO setup_01 推送offer
             $post_result = FuseClick::offerPost($conversion_result);
             $post_result_arr = json_decode($post_result['result'], true);
-            //$post_result_arr['httpStatus'] = 201;
+
             if ($post_result_arr['httpStatus'] == 201) {  //Created successfully!
                 $offer_id_from_fuse = $post_result_arr['data'][0]['id'];  //fuse 返回的id
                 fmtOut("Sync FuseClick create offer_id:${offer_id_from_fuse} Success!");
