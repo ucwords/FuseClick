@@ -8,7 +8,7 @@ class FuseClickStorage
 {
     public static function save($conversion_result, $creative, $carrier)
     {
-       if (in_array($conversion_result['offer']['advertiser_id'], [5,6, 8])) { //需要自动更新定的广告主
+       //if (in_array($conversion_result['offer']['advertiser_id'], [5,6, 8])) { //需要自动更新定的广告主
            /*********************自动与FuseClick同步开始************************/
 
            $offer_id = self::saveOffer($conversion_result['offer']);
@@ -48,10 +48,10 @@ class FuseClickStorage
            }
 
            /*********************自动与offerslook同步结束************************/
-       } else { //不需要自动更新的广告主走着里
-           $offer_info = ['fuse_offer_id' => 1];
-           self::runJobs($conversion_result['offer'], $creative, $carrier, $offer_info);
-       }
+       //} else { //不需要自动更新的广告主走着里
+           //$offer_info = ['fuse_offer_id' => 1];
+           //self::runJobs($conversion_result['offer'], $creative, $carrier, $offer_info);
+       //}
 
     }
 
@@ -63,19 +63,19 @@ class FuseClickStorage
             $post_result_arr = json_decode($post_result['result'], true);
             //$post_result_arr['httpStatus'] = 201;
             if ($post_result_arr['httpStatus'] == 201) {  //Created successfully!
-
-               // $offer_id_from_fuse = 36;//$post_result_arr['data'][0]['id'];  //fuse 返回的id
+                $offer_id_from_fuse = $post_result_arr['data'][0]['id'];  //fuse 返回的id
+                fmtOut("Sync FuseClick create offer_id:${offer_id_from_fuse} Success!");
                 FuseOffer::where('id', $local_offer['id'])->update(['fuse_status' => 1, 'push_status' => 1, 'fuse_offer_id' => intval($offer_id_from_fuse)]); //同步本地offer的两个状态
-                #TODO setup_01 上传素材
+                #TODO setup_02 上传素材
                 if (isset($creative['logo'])) {
 
                     foreach ($creative[ 'logo' ] as $image) {
                         $upload_result = FuseClick::uploadLogo($image[ 'local_path' ], $offer_id_from_fuse);
 
                         if (isset($upload_result[ 'httpStatus' ]) && $upload_result[ 'httpStatus' ] == 202) {
-                            fmtOut("Sync offerslook offer_id:${offer_id_from_fuse} offer_logo create Success!");
+                            fmtOut("Sync FuseClick offer_id:${offer_id_from_fuse} offer_logo create Success!");
                         } else {
-                            fmtOut('Sync offerslook offer_id:'.json_encode($upload_result). ' offer_creative create Error!');
+                            fmtOut('Sync FuseClick offer_id:'.json_encode($upload_result). ' offer_logo create Error!');
                         }
                     }
                 }
@@ -83,15 +83,19 @@ class FuseClickStorage
                     foreach ($creative[ 'image' ] as $image) {
                         $upload_result = FuseClick::uploadThumbnail($image[ 'local_path' ], $offer_id_from_fuse);
                         if (isset($upload_result[ 'httpStatus' ]) && $upload_result[ 'httpStatus' ] == 202) {
-                            fmtOut("Sync offerslook offer_id:${offer_id_from_fuse} offer_creative create Success! ");
+                            fmtOut("Sync FuseClick offer_id:${offer_id_from_fuse} offer_creative create Success! ");
                         } else {
-                            fmtOut('Sync offerslook offer_id:'.json_encode($upload_result). 'offer_creative create Error!');
+                            fmtOut('Sync FuseClick offer_id:'.json_encode($upload_result). 'offer_creative create Error!');
                         }
                     }
                 }
 
                 return $offer_id_from_fuse;
+            } else {
+                fmtOut("Sync FuseClick create error ${post_result_arr}");
+                return false;
             }
+
         } else {  //否则则为不需要自动更新
 
             $post_result = FuseClick::offerPost($conversion_result);
@@ -106,9 +110,9 @@ class FuseClickStorage
                         $upload_result = anyToArray($upload_result);
                         if (isset($upload_result[ 'httpStatus' ]) && $upload_result[ 'httpStatus' ] == 202) {
                             $offer_upload_id = $upload_result[ 'data' ][ $offer_id_from_fuse ][ 0 ][ 'banner_id' ];
-                            fmtOut("Sync offerslook offer_id:${offer_id_from_fuse} offer_creative create Success! Id:${offer_upload_id}");
+                            fmtOut("Sync FuseClick offer_id:${offer_id_from_fuse} offer_creative create Success! Id:${offer_upload_id}");
                         } else {
-                            fmtOut('Sync offerslook offer_id:'.json_encode($upload_result). 'offer_creative create Error!');
+                            fmtOut('Sync FuseClick offer_id:'.json_encode($upload_result). 'offer_creative create Error!');
                         }
                     }
                 }
@@ -176,9 +180,9 @@ class FuseClickStorage
             'cap_overall_limit' => $data[ 'cap_overall_limit' ],
             'cap_interval' => $data[ 'cap_interval' ],
             'cap_interval_limit' => $data[ 'cap_interval_limit' ],
-            'cap_affiliate_overall_limit' => $data[ 'cap_affiliate_overall_limit' ],
-            'cap_affiliate_interval' => $data[ 'cap_affiliate_interval' ],
-            'cap_affiliate_interval_limit' => $data[ 'cap_affiliate_interval_limit' ],
+            'cap_affiliate_overall_limit' => isset($data[ 'cap_affiliate_overall_limit' ]) ? $data[ 'cap_affiliate_overall_limit' ] : 0,
+            'cap_affiliate_interval' => isset($data[ 'cap_affiliate_interval' ]) ? $data[ 'cap_affiliate_interval' ] : 0,
+            'cap_affiliate_interval_limit' => isset($data[ 'cap_affiliate_interval_limit' ]) ? $data[ 'cap_affiliate_interval_limit' ] : 0,
             'adv_status' => 1,
         ]);
 

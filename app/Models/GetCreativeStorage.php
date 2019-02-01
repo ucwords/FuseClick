@@ -18,6 +18,7 @@ class GetCreativeStorage
 
             return self::getGoogle($package_name);
         }
+        //$package_name = '297606951';
 
         $url = 'https://itunes.apple.com/us/lookup?id='.$package_name;
         $html_json_data = self::creativeGet($url);
@@ -25,10 +26,9 @@ class GetCreativeStorage
         //$html_json_data = json_encode($html_doc, true);
         //dd($html_json_data);
         $result = [];
-        if (!$html_json_data['resultCount']) {
-            return 'This '.$package_name. 'name was not found';
+        if (empty($html_json_data['results'])) {
+            return false;
         }
-        //$result['name'] = $html_json_data['results'][0]['trackCensoredName'];
         $result['icon'] = $html_json_data['results'][0]['artworkUrl512'];
         //$result['description'] = $html_json_data['results'][0]['description'];
         //$result['min_os_vs'] = $html_json_data['results'][0]['minimumOsVersion'];
@@ -49,6 +49,8 @@ class GetCreativeStorage
     public static function getGoogle($package_name='me.piebridge.brevent',$hl='en'){
         $url = 'https://play.google.com/store/apps/details?id=' . $package_name . '&hl='.$hl;
         $html = self::creativeGet($url);
+        if (!$html) return false;
+
         try{
             $dom = new  \HtmlParser\ParserDom($html);
             $info = [];
@@ -70,7 +72,7 @@ class GetCreativeStorage
 
     }
 
-    public static function creativeGet($url,$post_data=false,$ignore_ssl=true, $dataType='text')
+    public static function creativeGet($url,$post_data=false,$ignore_ssl=true, $dataType='json')
     {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_USERAGENT, 'Chrome 42.0.2311.135 Pentamob');
@@ -103,7 +105,7 @@ class GetCreativeStorage
             }
             return $data;
         } else {
-            return $error_info;
+            return false;
         }
     }
 }

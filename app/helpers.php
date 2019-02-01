@@ -30,6 +30,24 @@ if (!function_exists('anyToArray')) {
         }
     }
 }
+
+if (!function_exists('getPackageName')) {
+    function getPackageName($preview_url)
+    {
+        if ($preview_url) {
+            if (strpos($preview_url, 'google') != false) {
+                $url_arr = explode('=', parse_url($preview_url)['query']);
+                return $url_arr[1];
+            } else {
+                $url = pathinfo($preview_url)['basename'];
+                $str = str_replace('id', '', $url);
+                return substr($str, 0, strpos($str, '?'));
+            }
+        }
+    }
+}
+
+
 if (!function_exists('fmtOut')) {
     function fmtOut($str, $dm = 1)
     {
