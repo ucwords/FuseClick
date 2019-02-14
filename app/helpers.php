@@ -37,7 +37,7 @@ if (!function_exists('getPackageName')) {
         if ($preview_url) {
             if (strpos($preview_url, 'google') != false) {
                 $url_arr = explode('=', parse_url($preview_url)['query']);
-                return $url_arr[1];
+                return str_replace('&hl', '', $url_arr[1]);
             } else {
                 $url = pathinfo($preview_url)['basename'];
                 $str = str_replace('id', '', $url);
