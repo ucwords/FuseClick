@@ -21,10 +21,9 @@ class GetCreativeStorage
         //$package_name = '297606951';
 
         $url = 'https://itunes.apple.com/us/lookup?id='.$package_name;
-        $html_json_data = self::creativeGet($url);
-        //dd($html_doc);
-        //$html_json_data = json_encode($html_doc, true);
-        //dd($html_json_data);
+        //$html_json_data = self::creativeGet($url);
+        $html_json_data = json_decode(file_get_contents($url), true);
+
         $result = [];
         if (empty($html_json_data['results'])) {
             return false;
@@ -99,10 +98,8 @@ class GetCreativeStorage
         ];
 
         curl_close($curl);
+
         if (isset($status[ 'http_code' ]) && $status[ 'http_code' ] == 200) {
-            if ($dataType == 'json') {
-                $data = json_decode($data, true);
-            }
             return $data;
         } else {
             return false;
