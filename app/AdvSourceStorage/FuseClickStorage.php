@@ -91,8 +91,9 @@ class FuseClickStorage
                 }
 
                 return $offer_id_from_fuse;
+
             } else {
-                fmtOut("Sync FuseClick create error ${post_result_arr}");
+                fmtOut("Sync FuseClick create error！ result is: ".json_encode($post_result));
                 return false;
             }
 
@@ -172,12 +173,12 @@ class FuseClickStorage
             'session_lifespan' => $data[ 'session_lifespan' ],
             'url' => $data[ 'url' ],
             'restriction' => $data[ 'restriction' ],
-            'app_id' => $data[ 'app_id' ],
+            'app_id' => isset($data[ 'app_id' ]) ? $data[ 'app_id' ] : 11235445,
             'ssl' => $data[ 'ssl' ],
             'has_cap_limit' => $data[ 'has_cap_limit' ],
             'cap_type' => $data[ 'cap_type' ],
             'cap_event_range' => $data[ 'cap_event_range' ],
-            'cap_overall_limit' => $data[ 'cap_overall_limit' ],
+            'cap_overall_limit' => 1,
             'cap_interval' => $data[ 'cap_interval' ],
             'cap_interval_limit' => $data[ 'cap_interval_limit' ],
             'cap_affiliate_overall_limit' => isset($data[ 'cap_affiliate_overall_limit' ]) ? $data[ 'cap_affiliate_overall_limit' ] : 0,
